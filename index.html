@@ -1,111 +1,31 @@
-```html id="auto-camera"
 <!DOCTYPE html>
-<html lang="pl">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Detektor zmian fal spolaryzowanych</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: black;
-      font-family: sans-serif;
-    }
-
-    video {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      z-index: 1;
-    }
-
-    #controls {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 10;
-      display: flex;
-      gap: 10px;
-    }
-
-    button {
-      padding: 10px 15px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    #snapshot {
-      position: fixed;
-      width: 100vw;
-      height: 50px;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      border: 2px solid white;
-    }
-  </style>
+    <meta charset='utf-8'>
+    <title>DZFS 0.4</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="style.css">
+    <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+    <script src='main.js' defer></script>
 </head>
 <body>
+    <div id="background"></div>
+    <div id="flashWhite"></div>
+    <div id="flashRed"></div>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="overlay"></canvas>
+    <canvas id="preview"></canvas>
+    <button id="counter">0</button>
 
-<video id="video" autoplay playsinline></video>
-
-<div id="controls">
-  <button id="toggleCam">Przełącz kamerę</button>
-</div>
-
-<img id="snapshot" src="" alt="Snapshot" />
-
-<script>
-  const video = document.getElementById('video');
-  const toggleCam = document.getElementById('toggleCam');
-  const snapshot = document.getElementById('snapshot');
-
-  let useFront = false; // false = tylna kamera
-  let stream;
-
-  async function startCamera() {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: useFront ? "user" : "environment" },
-        audio: false
-      });
-      video.srcObject = stream;
-    } catch (err) {
-      alert("Brak dostępu do kamery: " + err);
-    }
-  }
-
-  toggleCam.addEventListener('click', () => {
-    useFront = !useFront;
-    startCamera();
-  });
-
-  function takeSnapshot() {
-    if (!stream) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    snapshot.src = canvas.toDataURL('image/png');
-  }
-
-  // start kamery
-  startCamera();
-
-  // auto snapshot co 5 sekund
-  setInterval(takeSnapshot, 5000);
-</script>
+    <div id="container1">
+        <button id="calibration"><img class="icons" src="icons/calibration.png"></button>
+        <button id="reset"><img class="icons" src="icons/reset.png"></button>
+        <button id="crop_start"><img class="icons" src="icons/crop_start.png"></button>
+        <button id="crop_stop"><img class="icons" src="icons/crop_stop.png"></button>
+        <button id="aspect_ratio">16:9</button>
+    </div>
+    <button id="record_start"><img class="icons" src="icons/record_start.png"></button>
+    <button id="record_stop"><img class="icons" src="icons/record_stop.png"></button>
 
 </body>
 </html>
-```
