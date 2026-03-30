@@ -524,16 +524,28 @@ window.addEventListener("deviceorientation", (e) => {
 });
 
 let startY = null;
-let currentBrightness = null;
+let currentValue = null;
+let mode = null; // "brightness" albo "exposure"
 
 function setupBrightnessControl() {
-    if (!stream) return; // jeszcze nie ma kamery
+    if (!stream) return;
 
     const track = stream.getVideoTracks()[0];
     const capabilities = track.getCapabilities();
     const settings = track.getSettings();
 
-    currentBrightness = settings.brightness ?? (capabilities.brightness.max + capabilities.brightness.min) / 2;
+    // log(JSON.stringify(capabilities));
+
+    // 🔥 wybór trybu
+    if (capabilities.brightness) {
+        mode = "brightness";
+        currentValue = settings.brightness ?? (capabilities.brightness.max + capabilities.brightness.min) / 2;
+    } else if (capabilities.exposureCompensation) {
+        mode = "exposure";
+        currentValue = settings.exposureCompensation ?? 0;
+    } else {
+        return;
+    }
 
     video.addEventListener("pointerdown", e => {
         startY = e.clientY;
@@ -541,23 +553,51 @@ function setupBrightnessControl() {
 
     video.addEventListener("pointermove", e => {
         if (startY === null) return;
-        const delta = startY - e.clientY; // w górę → jaśniej
-        const sensitivity = (capabilities.brightness.max - capabilities.brightness.min) / 300; 
-        let newBrightness = currentBrightness + delta * sensitivity;
 
-        newBrightness = Math.max(capabilities.brightness.min, Math.min(capabilities.brightness.max, newBrightness));
+        const delta = startY - e.clientY;
 
-        track.applyConstraints({
-            advanced: [{ brightness: newBrightness }]
-        });
+        let min, max;
+
+        if (mode === "brightness") {
+            min = capabilities.brightness.min;
+            max = capabilities.brightness.max;
+        } else {
+            min = -2;
+            max = 2;
+        }
+
+        const sensitivity = (max - min) / 300;
+        let newValue = currentValue + delta * sensitivity;
+
+        newValue = Math.max(min, Math.min(max, newValue));
+
+        if (mode === "brightness") {
+            track.applyConstraints({
+                advanced: [{ brightness: newValue }]
+            });
+        } else {
+            track.applyConstraints({
+                advanced: [{
+                    exposureMode: "manual",
+                    exposureCompensation: newValue
+                }]
+            });
+            // alert(newValue)
+        }
     });
 
     video.addEventListener("pointerup", () => {
-        currentBrightness = track.getSettings().brightness ?? currentBrightness;
+        const s = track.getSettings();
+
+        if (mode === "brightness") {
+            currentValue = s.brightness ?? currentValue;
+        } else {
+            currentValue = s.exposureCompensation ?? currentValue;
+        }
+
         startY = null;
     });
 }
-
 // po uruchomieniu kamery:
 StartCamera().then(() => {
     setupBrightnessControl();
