@@ -19,7 +19,7 @@ let recordFlag = false
 let detection = null;
 let lastFrame = null;
 let changeTimeout = null;
-const CHANGE_THRESHOLD = 6.5; // czułość (większe = mniej wrażliwe)
+const CHANGE_THRESHOLD = 8; // czułość (większe = mniej wrażliwe)
 let baseOrientation = null;
 const ROTATION_THRESHOLD = 1.5; // stopnie
 let projectorRatioIndex = 0
